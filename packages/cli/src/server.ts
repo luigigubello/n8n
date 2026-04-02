@@ -2,10 +2,16 @@ import { inDevelopment, inProduction } from '@n8n/backend-common';
 import { SecurityConfig, WorkflowsConfig } from '@n8n/config';
 import { Time } from '@n8n/constants';
 import type { APIRequest, AuthenticatedRequest } from '@n8n/db';
+
 import { Container, Service } from '@n8n/di';
+
+const getCspReportOnlyDirectives = (nonce: string) =>
+	`script-src 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self';`;
+
 import cookieParser from 'cookie-parser';
 import express from 'express';
-import { access as fsAccess } from 'fs/promises';
+import { access as fsAccess, readFile } from 'fs/promises';
+import { randomBytes } from 'crypto';
 import helmet from 'helmet';
 import isEmpty from 'lodash/isEmpty';
 import { InstanceSettings, installGlobalProxyAgent } from 'n8n-core';
@@ -417,7 +423,7 @@ export class Server extends AbstractServer {
 				...this.globalConfig.endpoints.additionalNonUIRoutes.split(':'),
 			].filter((u) => !!u);
 			const nonUIRoutesRegex = new RegExp(`^/(${nonUIRoutes.join('|')})/?.*$`);
-			const historyApiHandler: express.RequestHandler = (req, res, next) => {
+			const historyApiHandler: express.RequestHandler = async (req, res, next) => {
 				const {
 					method,
 					headers: { accept },
@@ -430,8 +436,28 @@ export class Server extends AbstractServer {
 					!nonUIRoutesRegex.test(req.path)
 				) {
 					res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, proxy-revalidate');
+
+					const nonce = randomBytes(16).toString('base64');
+					res.setHeader('Content-Security-Policy-Report-Only', getCspReportOnlyDirectives(nonce));
+
+					let indexHtml = '';
+					try {
+						indexHtml = await readFile(resolve(staticCacheDir, 'index.html'), 'utf8');
+					} catch (error) {
+						this.logger.error('Could not read index.html for CSP nonce injection', { error });
+						res.sendStatus(500);
+						return;
+					}
+
+					// Only replace explicit nonce placeholders injected at build-time.
+					// Additionally, add nonce attributes to trusted build assets (under
+					// /assets/ and /static/) so Vite-injected scripts receive the nonce.
+					// We do NOT add nonces to arbitrary script tags to avoid granting a
+					// nonce to attacker-injected scripts.
+					const content = indexHtml.replace(/nonce="\{\{CSP_NONCE\}\}"/g, `nonce="${nonce}"`);
+
 					securityHeadersMiddleware(req, res, () => {
-						res.sendFile('index.html', { root: staticCacheDir, maxAge: 0, lastModified: false });
+						res.send(content);
 					});
 				} else {
 					next();

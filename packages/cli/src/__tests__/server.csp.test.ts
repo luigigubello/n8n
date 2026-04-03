@@ -1,4 +1,4 @@
-import { getCspReportOnlyDirectives } from '@/server';
+import { getCspReportOnlyDirectives, buildCspMiddleware } from '@/server';
 
 describe('CSP directives verification', () => {
 	test('includes nonce in script-src and verify directives', () => {
@@ -8,6 +8,45 @@ describe('CSP directives verification', () => {
 		expect(directives).toContain("style-src 'self' 'unsafe-inline'");
 		expect(directives).toContain(`object-src 'none'`);
 		expect(directives).toContain(`base-uri 'self'`);
+	});
+
+	test('per-request middleware overwrites directives', () => {
+		const nonce = 'abc123';
+		const directives = { 'frame-ancestors': ['http://localhost:3000'] };
+		const middleware = buildCspMiddleware(directives as any, false, nonce);
+		const headers: Record<string, string> = {};
+		// minimal express-like objects
+		const req: any = {};
+		const res: any = { setHeader: (k: string, v: string) => (headers[k] = v) };
+		let called = false;
+		middleware(req, res, () => (called = true));
+		expect(called).toBe(true);
+		expect(headers['Content-Security-Policy']).toBeDefined();
+		expect(headers['Content-Security-Policy']).toContain('frame-ancestors http://localhost:3000');
+	});
+
+	test('per-request middleware respects provided script-src (no nonce injected)', () => {
+		const nonce = 'abc123';
+		const directives = { 'script-src': ['*'] };
+		const middleware = buildCspMiddleware(directives as any, false, nonce);
+		const headers: Record<string, string> = {};
+		const req: any = {};
+		const res: any = { setHeader: (k: string, v: string) => (headers[k] = v) };
+		middleware(req, res, () => {});
+		expect(headers['Content-Security-Policy']).toBeDefined();
+		expect(headers['Content-Security-Policy']).toContain('script-src *');
+		expect(headers['Content-Security-Policy']).not.toContain(`'nonce-${nonce}'`);
+	});
+
+	test('per-request middleware uses Report-Only header when requested', () => {
+		const nonce = 'rpt1';
+		const directives = {};
+		const middleware = buildCspMiddleware(directives as any, true, nonce);
+		const headers: Record<string, string> = {};
+		const req: any = {};
+		const res: any = { setHeader: (k: string, v: string) => (headers[k] = v) };
+		middleware(req, res, () => {});
+		expect(headers['Content-Security-Policy-Report-Only']).toBeDefined();
 	});
 
 	test('replaces nonce placeholder in index html', () => {

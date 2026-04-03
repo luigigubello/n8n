@@ -8,6 +8,51 @@ import { Container, Service } from '@n8n/di';
 export const getCspReportOnlyDirectives = (nonce: string) =>
 	`script-src 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self';`;
 
+export const buildCspMiddleware = (
+	cspDirectives: { [key: string]: Iterable<string> } | undefined,
+	cspReportOnly: boolean,
+	nonce: string,
+) => {
+	const buildHeaderFromDirectives = (directives: { [key: string]: Array<string> }) =>
+		Object.entries(directives)
+			.map(([k, v]) => `${k} ${v.join(' ')}`)
+			.join('; ');
+
+	// If no custom directives provided, return the predefined header string.
+	if (isEmpty(cspDirectives)) {
+		const header = getCspReportOnlyDirectives(nonce);
+		const headerName = cspReportOnly
+			? 'Content-Security-Policy-Report-Only'
+			: 'Content-Security-Policy';
+		return (req: any, res: any, next: () => void) => {
+			res.setHeader(headerName, header);
+			next();
+		};
+	}
+
+	const mergedDirectives: { [key: string]: Array<string> } = {};
+	Object.entries(cspDirectives).forEach(([k, v]) => {
+		mergedDirectives[k] = Array.isArray(v) ? [...v] : Array.from(v as Iterable<string>);
+	});
+
+	const scriptKey = 'script-src';
+	const nonceToken = `'nonce-${nonce}'`;
+	// If user provided `script-src`, respect it completely (allow full overwrite).
+	// Only inject a nonce when the user did not specify `script-src`.
+	if (!mergedDirectives[scriptKey]) {
+		mergedDirectives[scriptKey] = [nonceToken, "'strict-dynamic'", "'unsafe-eval'"];
+	}
+
+	const header = buildHeaderFromDirectives(mergedDirectives);
+	const headerName = cspReportOnly
+		? 'Content-Security-Policy-Report-Only'
+		: 'Content-Security-Policy';
+	return (req: any, res: any, next: () => void) => {
+		res.setHeader(headerName, header);
+		next();
+	};
+};
+
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import { access as fsAccess, readFile } from 'fs/promises';
@@ -377,16 +422,11 @@ export class Server extends AbstractServer {
 			);
 			const crossOriginOpenerPolicy = Container.get(SecurityConfig).crossOriginOpenerPolicy;
 			const cspReportOnly = Container.get(SecurityConfig).contentSecurityPolicyReportOnly;
+			// Disable global CSP here and apply a per-request CSP middleware below so
+			// we can inject a per-request nonce into `script-src` without overwriting
+			// other route-specific CSP headers (some handlers set CSP directly).
 			const securityHeadersMiddleware = helmet({
-				contentSecurityPolicy: isEmpty(cspDirectives)
-					? false
-					: {
-							useDefaults: false,
-							reportOnly: cspReportOnly,
-							directives: {
-								...cspDirectives,
-							},
-						},
+				contentSecurityPolicy: false,
 				xFrameOptions:
 					isPreviewMode || inE2ETests || inDevelopment ? false : { action: 'sameorigin' },
 				dnsPrefetchControl: false,
@@ -407,6 +447,9 @@ export class Server extends AbstractServer {
 					policy: crossOriginOpenerPolicy,
 				},
 			});
+
+			// buildCspMiddleware is exported at module level so tests can validate
+			// merging and report-only behavior.
 
 			// Route all UI urls to index.html to support history-api
 			const nonUIRoutes: readonly string[] = [
@@ -438,7 +481,13 @@ export class Server extends AbstractServer {
 					res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, proxy-revalidate');
 
 					const nonce = randomBytes(16).toString('base64');
-					res.setHeader('Content-Security-Policy', getCspReportOnlyDirectives(nonce));
+
+					// Apply CSP per-request so we can inject the nonce into
+					// `script-src` while merging any directives from
+					// `N8N_CONTENT_SECURITY_POLICY`. This avoids overwriting
+					// route-specific CSP set elsewhere and honors the
+					// `N8N_CONTENT_SECURITY_POLICY_REPORT_ONLY` flag.
+					const cspMiddleware = buildCspMiddleware(cspDirectives, cspReportOnly, nonce);
 
 					let indexHtml = '';
 					try {
@@ -456,8 +505,10 @@ export class Server extends AbstractServer {
 					// nonce to attacker-injected scripts.
 					const content = indexHtml.replace(/nonce="\{\{CSP_NONCE\}\}"/g, `nonce="${nonce}"`);
 
-					securityHeadersMiddleware(req, res, () => {
-						res.send(content);
+					cspMiddleware(req, res, () => {
+						securityHeadersMiddleware(req, res, () => {
+							res.send(content);
+						});
 					});
 				} else {
 					next();

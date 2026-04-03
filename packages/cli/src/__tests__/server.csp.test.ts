@@ -1,7 +1,7 @@
 import { getCspReportOnlyDirectives } from '@/server';
 
-describe('CSP helper', () => {
-	test('includes nonce in script-src and other directives', () => {
+describe('CSP directives verification', () => {
+	test('includes nonce in script-src and verify directives', () => {
 		const nonce = 'abc123';
 		const directives = getCspReportOnlyDirectives(nonce);
 		expect(directives).toContain(`'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval'`);

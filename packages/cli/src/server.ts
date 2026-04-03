@@ -6,7 +6,7 @@ import type { APIRequest, AuthenticatedRequest } from '@n8n/db';
 import { Container, Service } from '@n8n/di';
 
 const getCspReportOnlyDirectives = (nonce: string) =>
-	`script-src 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self';`;
+	`script-src 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self';`;
 
 import cookieParser from 'cookie-parser';
 import express from 'express';
@@ -438,7 +438,7 @@ export class Server extends AbstractServer {
 					res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, proxy-revalidate');
 
 					const nonce = randomBytes(16).toString('base64');
-					res.setHeader('Content-Security-Policy-Report-Only', getCspReportOnlyDirectives(nonce));
+					res.setHeader('Content-Security-Policy', getCspReportOnlyDirectives(nonce));
 
 					let indexHtml = '';
 					try {

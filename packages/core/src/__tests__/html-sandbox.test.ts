@@ -49,15 +49,24 @@ describe('isFormHtmlSandboxingDisabled', () => {
 });
 
 describe('getHtmlSandboxCSP', () => {
-	it('should return correct CSP sandbox directive', () => {
+	it('should return correct sandbox CSP with base directives', () => {
 		const csp = getHtmlSandboxCSP();
 		expect(csp).toBe(
-			'sandbox allow-downloads allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-presentation allow-scripts allow-top-navigation-by-user-activation allow-top-navigation-to-custom-protocols',
+			"sandbox allow-downloads allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-presentation allow-scripts allow-top-navigation-by-user-activation allow-top-navigation-to-custom-protocols; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'",
 		);
 	});
 
 	it('should not include allow-same-origin', () => {
 		const csp = getHtmlSandboxCSP();
 		expect(csp).not.toContain('allow-same-origin');
+	});
+
+	it('should merge sandbox directives with base CSP when nonce is given', () => {
+		securityConfig.contentSecurityPolicy = '{}';
+		const csp = getHtmlSandboxCSP('abc123');
+		expect(csp).toContain('sandbox allow-downloads');
+		expect(csp).toContain("script-src 'nonce-abc123' 'strict-dynamic' 'unsafe-eval'");
+		expect(csp).toContain("style-src 'self' 'unsafe-inline'");
+		expect(csp).toContain("base-uri 'self'");
 	});
 });

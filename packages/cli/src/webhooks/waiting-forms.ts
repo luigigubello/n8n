@@ -1,6 +1,7 @@
 import type { IExecutionResponse } from '@n8n/db';
 import { Service } from '@n8n/di';
 import type express from 'express';
+import { randomBytes } from 'crypto';
 import type { IRunData } from 'n8n-workflow';
 import { getHtmlSandboxCSP, isFormHtmlSandboxingDisabled } from 'n8n-core';
 import {
@@ -111,10 +112,12 @@ export class WaitingForms extends WaitingWebhooks {
 			);
 
 			if (!completionPage) {
+				const nonce = randomBytes(16).toString('base64');
 				if (!isFormHtmlSandboxingDisabled()) {
-					res.setHeader('Content-Security-Policy', getHtmlSandboxCSP());
+					res.setHeader('Content-Security-Policy', getHtmlSandboxCSP(nonce));
 				}
 				res.render('form-trigger-completion', {
+					nonce,
 					title: 'Form Submitted',
 					message: 'Your response has been recorded',
 					formTitle: 'Form Submitted',

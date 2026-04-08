@@ -5,6 +5,7 @@ describe('CSP directives verification', () => {
 		const nonce = 'abc123';
 		const directives = getCspReportOnlyDirectives(nonce);
 		expect(directives).toContain(`'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval'`);
+		expect(directives).toContain("style-src 'self' 'unsafe-inline'");
 		expect(directives).toContain(`object-src 'none'`);
 		expect(directives).toContain(`base-uri 'self'`);
 	});

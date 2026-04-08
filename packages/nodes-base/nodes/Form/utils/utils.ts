@@ -1,6 +1,5 @@
 import type { Response } from 'express';
 import { rm } from 'fs/promises';
-import { randomBytes } from 'crypto';
 import isbot from 'isbot';
 import { DateTime } from 'luxon';
 import { getHtmlSandboxCSP, isFormHtmlSandboxingDisabled } from 'n8n-core';
@@ -568,11 +567,10 @@ export function renderForm({
 		authToken,
 	});
 
-	const nonce = randomBytes(16).toString('base64');
 	if (!isFormHtmlSandboxingDisabled()) {
-		res.setHeader('Content-Security-Policy', getHtmlSandboxCSP(nonce));
+		res.setHeader('Content-Security-Policy', getHtmlSandboxCSP());
 	}
-	res.render('form-trigger', { ...data, nonce });
+	res.render('form-trigger', data);
 }
 
 export const isFormConnected = (nodes: NodeTypeAndVersion[]) => {

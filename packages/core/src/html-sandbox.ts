@@ -56,8 +56,6 @@ export const getBaseCspDirectives = (nonce?: string) => {
 		directives['script-src'] = [`'nonce-${nonce}'`, "'strict-dynamic'", "'unsafe-eval'"];
 	}
 
-	delete directives['style-src'];
-
 	return directives;
 };
 

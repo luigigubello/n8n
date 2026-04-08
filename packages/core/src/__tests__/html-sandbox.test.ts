@@ -67,6 +67,5 @@ describe('getHtmlSandboxCSP', () => {
 		expect(csp).toContain('sandbox allow-downloads');
 		expect(csp).toContain("script-src 'nonce-abc123' 'strict-dynamic' 'unsafe-eval'");
 		expect(csp).toContain("base-uri 'self'");
-		expect(csp).not.toContain('style-src');
 	});
 });

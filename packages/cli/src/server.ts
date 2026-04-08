@@ -6,7 +6,7 @@ import type { APIRequest, AuthenticatedRequest } from '@n8n/db';
 import { Container, Service } from '@n8n/di';
 
 export const getCspReportOnlyDirectives = (nonce: string) =>
-	`script-src 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval'; object-src 'none'; base-uri 'self';`;
+	`script-src 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval'; object-src 'none'; base-uri 'none';`;
 
 export const buildCspMiddleware = (
 	cspDirectives: { [key: string]: Iterable<string> } | undefined,

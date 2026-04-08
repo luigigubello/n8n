@@ -6,7 +6,7 @@ describe('CSP directives verification', () => {
 		const directives = getCspReportOnlyDirectives(nonce);
 		expect(directives).toContain(`'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval'`);
 		expect(directives).toContain(`object-src 'none'`);
-		expect(directives).toContain(`base-uri 'self'`);
+		expect(directives).toContain(`base-uri 'none'`);
 	});
 
 	test('per-request middleware overwrites directives', () => {

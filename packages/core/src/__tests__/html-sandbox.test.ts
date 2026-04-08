@@ -52,7 +52,7 @@ describe('getHtmlSandboxCSP', () => {
 	it('should return correct sandbox CSP with base directives', () => {
 		const csp = getHtmlSandboxCSP();
 		expect(csp).toBe(
-			"sandbox allow-downloads allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-presentation allow-scripts allow-top-navigation-by-user-activation allow-top-navigation-to-custom-protocols; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'",
+			"sandbox allow-downloads allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-presentation allow-scripts allow-top-navigation-by-user-activation allow-top-navigation-to-custom-protocols; object-src 'none'; base-uri 'self'",
 		);
 	});
 
@@ -66,7 +66,7 @@ describe('getHtmlSandboxCSP', () => {
 		const csp = getHtmlSandboxCSP('abc123');
 		expect(csp).toContain('sandbox allow-downloads');
 		expect(csp).toContain("script-src 'nonce-abc123' 'strict-dynamic' 'unsafe-eval'");
-		expect(csp).toContain("style-src 'self' 'unsafe-inline'");
 		expect(csp).toContain("base-uri 'self'");
+		expect(csp).not.toContain('style-src');
 	});
 });

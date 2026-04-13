@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+import Handlebars from 'handlebars';
 import { getCspReportOnlyDirectives, buildCspMiddleware } from '@/server';
 
 describe('CSP directives verification', () => {
@@ -55,5 +58,21 @@ describe('CSP directives verification', () => {
 		const content = indexHtml.replace(/nonce="\{\{CSP_NONCE\}\}"/g, `nonce="${nonce}"`);
 		expect(content).toContain(`nonce="${nonce}"`);
 		expect(content).not.toContain('{{CSP_NONCE}}');
+	});
+
+	test('renders nonce in form-trigger templates without HTML escaping', () => {
+		const nonce = 'IRJowsKxHrvgvUPTZWb5Yg==';
+		const templatePaths = [
+			path.join(__dirname, '..', '..', 'templates', 'form-trigger.handlebars'),
+			path.join(__dirname, '..', '..', 'templates', 'form-trigger-completion.handlebars'),
+		];
+
+		for (const templatePath of templatePaths) {
+			const markup = fs.readFileSync(templatePath, 'utf8');
+			const template = Handlebars.compile(markup);
+			const rendered = template({ nonce });
+			expect(rendered).toContain(`nonce="${nonce}"`);
+			expect(rendered).not.toContain('&#x3D;');
+		}
 	});
 });

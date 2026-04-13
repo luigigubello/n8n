@@ -1,5 +1,6 @@
 import isbot from 'isbot';
 import { getHtmlSandboxCSP, isFormHtmlSandboxingDisabled } from 'n8n-core';
+import { randomBytes } from 'crypto';
 import type {
 	FormFieldsParameter,
 	IDataObject,
@@ -391,10 +392,11 @@ export async function sendAndWaitWebhook(this: IWebhookFunctions) {
 				customCss,
 			});
 
+			const nonce = randomBytes(16).toString('base64');
 			if (!isFormHtmlSandboxingDisabled()) {
-				res.setHeader('Content-Security-Policy', getHtmlSandboxCSP());
+				res.setHeader('Content-Security-Policy', getHtmlSandboxCSP(nonce));
 			}
-			res.render('form-trigger', data);
+			res.render('form-trigger', { ...data, nonce });
 
 			return {
 				noWebhookResponse: true,
@@ -445,10 +447,11 @@ export async function sendAndWaitWebhook(this: IWebhookFunctions) {
 				customCss,
 			});
 
+			const nonce = randomBytes(16).toString('base64');
 			if (!isFormHtmlSandboxingDisabled()) {
-				res.setHeader('Content-Security-Policy', getHtmlSandboxCSP());
+				res.setHeader('Content-Security-Policy', getHtmlSandboxCSP(nonce));
 			}
-			res.render('form-trigger', data);
+			res.render('form-trigger', { ...data, nonce });
 
 			return {
 				noWebhookResponse: true,

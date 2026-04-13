@@ -73,8 +73,11 @@ export const renderFormCompletion = async (
 	) as boolean;
 
 	const nonce = randomBytes(16).toString('base64');
-	if (respondWith !== 'redirect' && !isFormHtmlSandboxingDisabled()) {
-		res.setHeader('Content-Security-Policy', getHtmlSandboxCSP(nonce));
+	if (respondWith !== 'redirect') {
+		res.setHeader(
+			'Content-Security-Policy',
+			getHtmlSandboxCSP(nonce, !isFormHtmlSandboxingDisabled()),
+		);
 	}
 
 	res.render('form-trigger-completion', {

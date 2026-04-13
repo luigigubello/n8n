@@ -138,9 +138,10 @@ class WebhookRequestHandler {
 	private setResponseHeaders(res: express.Response, headers?: WebhookResponseHeaders) {
 		headers?.applyToResponse(res);
 
-		if (!isWebhookHtmlSandboxingDisabled()) {
-			res.setHeader('Content-Security-Policy', getHtmlSandboxCSP());
-		}
+		res.setHeader(
+			'Content-Security-Policy',
+			getHtmlSandboxCSP(undefined, !isWebhookHtmlSandboxingDisabled()),
+		);
 	}
 
 	/**

@@ -113,9 +113,10 @@ export class WaitingForms extends WaitingWebhooks {
 
 			if (!completionPage) {
 				const nonce = randomBytes(16).toString('base64');
-				if (!isFormHtmlSandboxingDisabled()) {
-					res.setHeader('Content-Security-Policy', getHtmlSandboxCSP(nonce));
-				}
+				res.setHeader(
+					'Content-Security-Policy',
+					getHtmlSandboxCSP(nonce, !isFormHtmlSandboxingDisabled()),
+				);
 				res.render('form-trigger-completion', {
 					nonce,
 					title: 'Form Submitted',

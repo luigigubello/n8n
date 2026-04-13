@@ -393,9 +393,10 @@ export async function sendAndWaitWebhook(this: IWebhookFunctions) {
 			});
 
 			const nonce = randomBytes(16).toString('base64');
-			if (!isFormHtmlSandboxingDisabled()) {
-				res.setHeader('Content-Security-Policy', getHtmlSandboxCSP(nonce));
-			}
+			res.setHeader(
+				'Content-Security-Policy',
+				getHtmlSandboxCSP(nonce, !isFormHtmlSandboxingDisabled()),
+			);
 			res.render('form-trigger', { ...data, nonce });
 
 			return {
@@ -448,9 +449,10 @@ export async function sendAndWaitWebhook(this: IWebhookFunctions) {
 			});
 
 			const nonce = randomBytes(16).toString('base64');
-			if (!isFormHtmlSandboxingDisabled()) {
-				res.setHeader('Content-Security-Policy', getHtmlSandboxCSP(nonce));
-			}
+			res.setHeader(
+				'Content-Security-Policy',
+				getHtmlSandboxCSP(nonce, !isFormHtmlSandboxingDisabled()),
+			);
 			res.render('form-trigger', { ...data, nonce });
 
 			return {

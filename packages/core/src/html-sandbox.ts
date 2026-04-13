@@ -67,20 +67,26 @@ export const isFormHtmlSandboxingDisabled = () => {
 	return Container.get(SecurityConfig).disableFormHtmlSandboxing;
 };
 
-export const getHtmlSandboxCspDirectives = () => ({
-	sandbox: [
-		'allow-downloads',
-		'allow-forms',
-		'allow-modals',
-		'allow-orientation-lock',
-		'allow-pointer-lock',
-		'allow-popups',
-		'allow-presentation',
-		'allow-scripts',
-		'allow-top-navigation-by-user-activation',
-		'allow-top-navigation-to-custom-protocols',
-	],
-});
+export const getHtmlSandboxCspDirectives = (includeSandbox = true): Record<string, string[]> => {
+	if (!includeSandbox) {
+		return {};
+	}
+
+	return {
+		sandbox: [
+			'allow-downloads',
+			'allow-forms',
+			'allow-modals',
+			'allow-orientation-lock',
+			'allow-pointer-lock',
+			'allow-popups',
+			'allow-presentation',
+			'allow-scripts',
+			'allow-top-navigation-by-user-activation',
+			'allow-top-navigation-to-custom-protocols',
+		],
+	};
+};
 
 const mergeUniqueValues = (existing: string[], additions: string[]) => [
 	...existing,
@@ -102,5 +108,7 @@ export const mergeCspDirectives = (
 	return merged;
 };
 
-export const getHtmlSandboxCSP = (nonce?: string): string =>
-	buildCspHeader(mergeCspDirectives(getHtmlSandboxCspDirectives(), getBaseCspDirectives(nonce)));
+export const getHtmlSandboxCSP = (nonce?: string, includeSandbox = true): string =>
+	buildCspHeader(
+		mergeCspDirectives(getHtmlSandboxCspDirectives(includeSandbox), getBaseCspDirectives(nonce)),
+	);

@@ -471,7 +471,9 @@ describe('FormTrigger, formWebhook', () => {
 
 		expect(mockRender).toHaveBeenCalledWith('form-trigger', {
 			appendAttribution: true,
+			authToken: undefined,
 			buttonLabel: 'Submit',
+			dangerousCustomCss: undefined,
 			formDescription: 'Test Description',
 			formDescriptionMetadata: 'Test Description',
 			formFields: [
@@ -538,10 +540,12 @@ describe('FormTrigger, formWebhook', () => {
 					placeholder: undefined,
 				},
 			],
+			formSubmittedHeader: undefined,
 			formSubmittedText: 'Your response has been recorded',
 			formTitle: 'Test Form',
 			n8nWebsiteLink:
 				'https://n8n.io/?utm_source=n8n-internal&utm_medium=form-trigger&utm_campaign=instanceId',
+			nonce: expect.any(String),
 			testRun: true,
 			useResponseData: false,
 		});
@@ -572,7 +576,9 @@ describe('FormTrigger, formWebhook', () => {
 
 			expect(mockRender).toHaveBeenCalledWith('form-trigger', {
 				appendAttribution: true,
+				authToken: undefined,
 				buttonLabel: 'Submit',
+				dangerousCustomCss: undefined,
 				formDescription: expected,
 				formDescriptionMetadata: createDescriptionMetadata(expected),
 				formFields: [
@@ -587,10 +593,12 @@ describe('FormTrigger, formWebhook', () => {
 						type: 'text',
 					},
 				],
+				formSubmittedHeader: undefined,
 				formSubmittedText: 'Your response has been recorded',
 				formTitle: 'Test Form',
 				n8nWebsiteLink:
 					'https://n8n.io/?utm_source=n8n-internal&utm_medium=form-trigger&utm_campaign=instanceId',
+				nonce: expect.any(String),
 				testRun: true,
 				useResponseData: false,
 			});
@@ -618,7 +626,9 @@ describe('FormTrigger, formWebhook', () => {
 
 		expect(mockRender).toHaveBeenCalledWith('form-trigger', {
 			appendAttribution: true,
+			authToken: undefined,
 			buttonLabel: 'Submit',
+			dangerousCustomCss: undefined,
 			formDescription: expected,
 			formDescriptionMetadata: createDescriptionMetadata(expected),
 			formFields: [
@@ -633,10 +643,12 @@ describe('FormTrigger, formWebhook', () => {
 					type: 'text',
 				},
 			],
+			formSubmittedHeader: undefined,
 			formSubmittedText: 'Your response has been recorded',
 			formTitle: 'Test Form',
 			n8nWebsiteLink:
 				'https://n8n.io/?utm_source=n8n-internal&utm_medium=form-trigger&utm_campaign=instanceId',
+			nonce: expect.any(String),
 			testRun: true,
 			useResponseData: false,
 		});

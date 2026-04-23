@@ -80,6 +80,7 @@ export const getHtmlSandboxCspDirectives = (includeSandbox = true): Record<strin
 			'allow-orientation-lock',
 			'allow-pointer-lock',
 			'allow-popups',
+      'allow-popups-to-escape-sandbox',
 			'allow-presentation',
 			'allow-scripts',
 			'allow-top-navigation-by-user-activation',
